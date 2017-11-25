@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
       AddressValue remoteAddress (InetSocketAddress (bombs[(i+1)%bombs.size()].GetChildIpv4Address(j), 9999));
       client.SetAttribute ("Remote", remoteAddress);
       client.SetAttribute ("MaxBytes", UintegerValue(0));
-      client.SetAttribute ("DataRate",StringValue ("1Mbps"));
+      client.SetAttribute ("DataRate",StringValue ("1Kbps"));
       client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
       client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
 
@@ -240,6 +240,9 @@ int main(int argc, char* argv[])
         wormApp -> SetInfected (true);
         wormApp -> SetTotalNumOfInfected(1);
         numVulnerableNodes++;
+        wormApp->SetPatching (true);
+        wormApp->SetPatchingTime (0.1);
+
       }
 
       wormApp->SetStartTime (Seconds (0.0));

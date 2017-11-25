@@ -63,6 +63,9 @@ Worm::Worm()
   : m_infected(false),
     m_vulnerable(false),
     m_connected(false),
+    ////////////
+    m_patching(false),
+    ////////////
     m_residualBits(0),
     m_totalBytes(0),
     m_addressForPattern3(0),
@@ -127,6 +130,28 @@ void Worm::SetPatternId (uint32_t patternId)
   m_patternId = patternId;
 }
 
+void Worm::SetPatching (bool patching)
+{
+  m_patching = patching;
+}
+
+void Worm::SetPatchingTime (double patchingTime)
+{
+  if(m_patching)
+  {
+    ns3::Time PatchTime (ns3::Seconds (static_cast<double>(patchingTime))); 
+    m_patchEvent = ns3::Simulator::Schedule (PatchTime,
+                                         &Worm::StartPatching, this);
+  } 
+}
+
+void Worm::StartPatching()
+{
+  if(m_infected) m_totalInfected--;
+  m_infected = false;
+  m_vulnerable = false;
+}
+
 uint32_t Worm::GetInfectedNodes ()
 {
   return m_totalInfected;
@@ -166,7 +191,7 @@ ns3::Ipv4Address Worm::guessIP()
   if(m_patternId == 0)
   {
     i = uv->GetValue(1.0, 5.0);
-    j = uv->GetValue(1.0, 25.0);
+    j = uv->GetValue(1.0, 111.0);
     k = 2;
   }
 
@@ -234,6 +259,7 @@ void Worm::SendPacket(uint32_t index)
   m_totalBytes += m_pktSize;
   m_lastStartTime = ns3::Simulator::Now();
   m_residualBits = 0;
+  if(m_infected)
   ScheduleNextTx (index);
   // std::cerr << m_name << "end Sending Packet" << std::endl;
 }
