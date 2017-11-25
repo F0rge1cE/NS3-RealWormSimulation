@@ -11,7 +11,7 @@ author :
 #include <stdio.h>
 #include <string>
 #include <sys/time.h>
-#include <vector>
+//#include <vector>
 #include <time.h>
 #include <iomanip>
 #include <assert.h>
@@ -170,16 +170,17 @@ int main(int argc, char* argv[])
   hub2hub_500ms.SetChannelAttribute("Delay", StringValue(backBoneDelay));
 
   // Create nodes
-  PointToPointCampusHelper bomb0(nInner, hubInner, nChild, innerChild, 0%systemCount);
-  PointToPointCampusHelper bomb1(nInner, hubInner, nChild, innerChild, 1%systemCount);
-  PointToPointCampusHelper bomb2(nInner, hubInner, nChild, innerChild, 2%systemCount);
-  PointToPointCampusHelper bomb3(nInner, hubInner, nChild, innerChild, 3%systemCount);
+
+  std::vector<PointToPointCampusHelper> bombs;
+  for(uint32_t i = 0; i<4; i++){
+    PointToPointCampusHelper bomb(nInner, hubInner, nChild, innerChild, 0);
+    bombs.push_back(bomb);
+  }
 
   NetDeviceContainer hubDevice;
-  NetDeviceContainer hub2hub_dev1 = hub2hub_10ms.Install (bomb0.GetHub(), bomb1.GetHub());
-  NetDeviceContainer hub2hub_dev2 = hub2hub_100ms.Install (bomb1.GetHub(), bomb2.GetHub());
-  NetDeviceContainer hub2hub_dev3 = hub2hub_500ms.Install (bomb2.GetHub(), bomb3.GetHub());
-  // NetDeviceContainer hub2hub_dev4 = hub2hub_200ms.Install (bomb3.GetHub(), bomb0.GetHub());
+  NetDeviceContainer hub2hub_dev1 = hub2hub_10ms.Install (bombs[0].GetHub(), bombs[1].GetHub());
+  NetDeviceContainer hub2hub_dev2 = hub2hub_100ms.Install (bombs[1].GetHub(), bombs[2].GetHub());
+  NetDeviceContainer hub2hub_dev3 = hub2hub_500ms.Install (bombs[2].GetHub(), bombs[3].GetHub());
 
   InternetStackHelper stack;
 
@@ -195,16 +196,16 @@ int main(int argc, char* argv[])
 
   Ipv4AddressHelper address;
   address.SetBase("10.1.1.0", "255.255.255.0");
-  bomb0.AssignIpv4Addresses(address);
+  bombs[0].AssignIpv4Addresses(address);
 
   address.SetBase("10.2.1.0", "255.255.255.0");
-  bomb1.AssignIpv4Addresses(address);
+  bombs[1].AssignIpv4Addresses(address);
 
   address.SetBase("10.3.1.0", "255.255.255.0");
-  bomb2.AssignIpv4Addresses(address);
+  bombs[2].AssignIpv4Addresses(address);
 
   address.SetBase("10.4.1.0", "255.255.255.0");
-  bomb3.AssignIpv4Addresses(address);
+  bombs[3].AssignIpv4Addresses(address);
 
   address.SetBase("10.5.1.0", "255.255.255.0");
   Ipv4InterfaceContainer hub2hub_inter1 = address.Assign(hub2hub_dev1);
@@ -218,78 +219,28 @@ int main(int argc, char* argv[])
   Worm::SetPacketSize(payload);
   uint32_t numVulnerableNodes = 0;
 
-  for(uint32_t i = 0; i < nChild * nInner; i++){
-    PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
-    ApplicationContainer sinkApp = sinkHelper.Install (bomb0.GetChildNode(i));
-    sinkApp.Start(Seconds (0.0));
+  for (uint32_t i = 0; i<bombs.size(); i++){
+    for(uint32_t j = 0; j < nChild * nInner; j++){
+      PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
+      ApplicationContainer sinkApp = sinkHelper.Install (bombs[i].GetChildNode(j));
+      sinkApp.Start(Seconds (0.0));
 
-    OnOffHelper client ("ns3::UdpSocketFactory", Address ());
-    AddressValue remoteAddress (InetSocketAddress (bomb1.GetChildIpv4Address(i), 9999));
-    client.SetAttribute ("Remote", remoteAddress);
-    client.SetAttribute ("MaxBytes", UintegerValue(0));
-    client.SetAttribute ("DataRate",StringValue ("1Mbps"));
-    client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
-    client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
+      OnOffHelper client ("ns3::UdpSocketFactory", Address ());
+      AddressValue remoteAddress (InetSocketAddress (bombs[(i+1)%bombs.size()].GetChildIpv4Address(j), 9999));
+      client.SetAttribute ("Remote", remoteAddress);
+      client.SetAttribute ("MaxBytes", UintegerValue(0));
+      client.SetAttribute ("DataRate",StringValue ("1Mbps"));
+      client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
+      client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
 
-    ApplicationContainer clientApp;
-    clientApp.Add (client.Install (bomb0.GetChildNode(i)));
-    clientApp.Start (Seconds (0.0));
+      ApplicationContainer clientApp;
+      clientApp.Add (client.Install (bombs[i].GetChildNode(j)));
+      clientApp.Start (Seconds (0.0));
+    }
   }
+  
 
-  for(uint32_t i = 0; i < nChild * nInner; i++){
-    PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
-    ApplicationContainer sinkApp = sinkHelper.Install (bomb1.GetChildNode(i));
-    sinkApp.Start(Seconds (0.0));
-
-    OnOffHelper client ("ns3::UdpSocketFactory", Address ());
-    AddressValue remoteAddress (InetSocketAddress (bomb2.GetChildIpv4Address(i), 9999));
-    client.SetAttribute ("Remote", remoteAddress);
-    client.SetAttribute ("MaxBytes", UintegerValue(0));
-    client.SetAttribute ("DataRate",StringValue ("5Mbps"));
-    client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
-    client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
-
-    ApplicationContainer clientApp;
-    clientApp.Add (client.Install (bomb1.GetChildNode(i)));
-    clientApp.Start (Seconds (0.0));
-  }
-
-  for(uint32_t i = 0; i < nChild * nInner; i++){
-    PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
-    ApplicationContainer sinkApp = sinkHelper.Install (bomb2.GetChildNode(i));
-    sinkApp.Start(Seconds (0.0));
-
-    OnOffHelper client ("ns3::UdpSocketFactory", Address ());
-    AddressValue remoteAddress (InetSocketAddress (bomb3.GetChildIpv4Address(i), 9999));
-    client.SetAttribute ("Remote", remoteAddress);
-    client.SetAttribute ("MaxBytes", UintegerValue(0));
-    client.SetAttribute ("DataRate",StringValue ("5Mbps"));
-    client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
-    client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
-
-    ApplicationContainer clientApp;
-    clientApp.Add (client.Install (bomb2.GetChildNode(i)));
-    clientApp.Start (Seconds (0.0));
-  }
-
-  for(uint32_t i = 0; i < nChild * nInner; i++){
-    PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
-    ApplicationContainer sinkApp = sinkHelper.Install (bomb3.GetChildNode(i));
-    sinkApp.Start(Seconds (0.0));
-
-    OnOffHelper client ("ns3::UdpSocketFactory", Address ());
-    AddressValue remoteAddress (InetSocketAddress (bomb0.GetChildIpv4Address(i), 9999));
-    client.SetAttribute ("Remote", remoteAddress);
-    client.SetAttribute ("MaxBytes", UintegerValue(0));
-    client.SetAttribute ("DataRate",StringValue ("5Mbps"));
-    client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
-    client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
-
-    ApplicationContainer clientApp;
-    clientApp.Add (client.Install (bomb3.GetChildNode(i)));
-    clientApp.Start (Seconds (0.0));
-  }
-  // Add the worm application to each node.
+  //Add the worm application to each node.
   if(systemId == 0%systemCount){
     for(uint32_t i=0; i < nChild * nInner; i++)
     {
@@ -316,7 +267,7 @@ int main(int argc, char* argv[])
       wormApp->SetStopTime (Seconds (simtime));
       wormApp->SetPatternId (patternId);
 
-      bomb0.GetChildNode(i)->AddApplication (wormApp);
+      bombs.at(0).GetChildNode(i)->AddApplication (wormApp);
       wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
     }
   }
@@ -338,7 +289,7 @@ int main(int argc, char* argv[])
       wormApp->SetStartTime (Seconds (0.0));
       wormApp->SetStopTime (Seconds (simtime));
 
-      bomb1.GetChildNode(i)->AddApplication (wormApp);
+      bombs.at(1).GetChildNode(i)->AddApplication (wormApp);
       wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
     }
   }
@@ -359,7 +310,7 @@ int main(int argc, char* argv[])
       wormApp->SetStartTime (Seconds (0.0));
       wormApp->SetStopTime (Seconds (simtime));
 
-      bomb2.GetChildNode(i)->AddApplication (wormApp);
+      bombs.at(2).GetChildNode(i)->AddApplication (wormApp);
       wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
     }
   }
@@ -380,7 +331,7 @@ int main(int argc, char* argv[])
       wormApp->SetStartTime (Seconds (0.0));
       wormApp->SetStopTime (Seconds (simtime));
 
-      bomb3.GetChildNode(i)->AddApplication (wormApp);
+      bombs.at(3).GetChildNode(i)->AddApplication (wormApp);
       wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
     }
   }
