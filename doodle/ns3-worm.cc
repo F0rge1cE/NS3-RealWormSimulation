@@ -321,7 +321,6 @@ void Worm::Listen(ns3::Ptr<ns3::Socket> socket)
       uint32_t pktMsg;
 
       Read32 ((const uint8_t *) &buffer[0], pktMsg);
-      std::cout<<pktMsg<<std::endl;
       for (uint32_t i=0; i < m_numConn; ++i)
         {
           if ((((uint32_t)m_infectionPort + i) == pktMsg) && (!m_infected) && (m_vulnerable))

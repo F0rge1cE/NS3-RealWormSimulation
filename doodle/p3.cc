@@ -227,7 +227,9 @@ int main(int argc, char* argv[])
     AddressValue remoteAddress (InetSocketAddress (bomb1.GetChildIpv4Address(i), 9999));
     client.SetAttribute ("Remote", remoteAddress);
     client.SetAttribute ("MaxBytes", UintegerValue(0));
-    client.SetAttribute ("DataRate",StringValue ("1Gbps"));
+    client.SetAttribute ("DataRate",StringValue ("1Mbps"));
+    client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
+    client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
 
     ApplicationContainer clientApp;
     clientApp.Add (client.Install (bomb0.GetChildNode(i)));
@@ -243,13 +245,15 @@ int main(int argc, char* argv[])
     AddressValue remoteAddress (InetSocketAddress (bomb2.GetChildIpv4Address(i), 9999));
     client.SetAttribute ("Remote", remoteAddress);
     client.SetAttribute ("MaxBytes", UintegerValue(0));
-    client.SetAttribute ("DataRate",StringValue ("1Gbps"));
+    client.SetAttribute ("DataRate",StringValue ("5Mbps"));
+    client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
+    client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
 
     ApplicationContainer clientApp;
     clientApp.Add (client.Install (bomb1.GetChildNode(i)));
     clientApp.Start (Seconds (0.0));
   }
-  
+
   for(uint32_t i = 0; i < nChild * nInner; i++){
     PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
     ApplicationContainer sinkApp = sinkHelper.Install (bomb2.GetChildNode(i));
@@ -259,7 +263,9 @@ int main(int argc, char* argv[])
     AddressValue remoteAddress (InetSocketAddress (bomb3.GetChildIpv4Address(i), 9999));
     client.SetAttribute ("Remote", remoteAddress);
     client.SetAttribute ("MaxBytes", UintegerValue(0));
-    client.SetAttribute ("DataRate",StringValue ("1Gbps"));
+    client.SetAttribute ("DataRate",StringValue ("5Mbps"));
+    client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
+    client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
 
     ApplicationContainer clientApp;
     clientApp.Add (client.Install (bomb2.GetChildNode(i)));
@@ -275,7 +281,9 @@ int main(int argc, char* argv[])
     AddressValue remoteAddress (InetSocketAddress (bomb0.GetChildIpv4Address(i), 9999));
     client.SetAttribute ("Remote", remoteAddress);
     client.SetAttribute ("MaxBytes", UintegerValue(0));
-    client.SetAttribute ("DataRate",StringValue ("1Gbps"));
+    client.SetAttribute ("DataRate",StringValue ("5Mbps"));
+    client.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
+    client.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
 
     ApplicationContainer clientApp;
     clientApp.Add (client.Install (bomb3.GetChildNode(i)));
@@ -423,7 +431,7 @@ int main(int argc, char* argv[])
   std::cout << "Simulator init time: " << d1 << std::endl;
   std::cout << "Simulator run time: " << d2 << std::endl;
   std::cout << "Total elapsed time: " << d1 + d2 << std::endl;
-  
+
   return 0;
 
 #else
