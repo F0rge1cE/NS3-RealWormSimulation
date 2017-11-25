@@ -43,16 +43,16 @@ author :
 // #define TCPWORMTYPE  1
 #define UDPWORMTYPE  2
 #define WORMTYPE     UDPWORMTYPE
-#define VULNERABILITY  0.48
+#define VULNERABILITY  1
 #define SCANRATE       5
 #define SCANRANGE      0
-#define PAYLOAD        1000
-#define SIMTIME        5
+#define PAYLOAD        404
+#define SIMTIME        0.2
 #define SEEDVALUE      1
 #define NIX true
 #define NULLMSG false
 #define TRACING false
-#define PATTERNID 1
+#define PATTERNID 3
 
 using namespace ns3;
 using namespace std;
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 
   cmd.Parse (argc,argv);
 
-  payload = scanrate * 100;
+  //payload = scanrate * 100;
   if(scanPattern=="Uniform")
   {
     patternId = 0;
@@ -148,25 +148,25 @@ int main(int argc, char* argv[])
   uint32_t nChild = 2;
 
   PointToPointHelper hubInner;
-  hubInner.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+  hubInner.SetDeviceAttribute("DataRate", StringValue("1Mbps"));
   hubInner.SetChannelAttribute("Delay", StringValue("5ms"));
 
   PointToPointHelper innerChild;
-  innerChild.SetDeviceAttribute("DataRate", StringValue("100Mbps"));
+  innerChild.SetDeviceAttribute("DataRate", StringValue("1Mbps"));
   innerChild.SetChannelAttribute("Delay", StringValue("8ms"));
 
   // ****** For MPI
   // P2P between hubs
   PointToPointHelper hub2hub_10ms;
-  hub2hub_10ms.SetDeviceAttribute("DataRate", StringValue("1Gbps"));
+  hub2hub_10ms.SetDeviceAttribute("DataRate", StringValue("50Mbps"));
   hub2hub_10ms.SetChannelAttribute("Delay", StringValue(backBoneDelay));
 
   PointToPointHelper hub2hub_100ms;
-  hub2hub_100ms.SetDeviceAttribute("DataRate", StringValue("1Gbps"));
+  hub2hub_100ms.SetDeviceAttribute("DataRate", StringValue("50Mbps"));
   hub2hub_100ms.SetChannelAttribute("Delay", StringValue(backBoneDelay));
 
   PointToPointHelper hub2hub_500ms;
-  hub2hub_500ms.SetDeviceAttribute("DataRate", StringValue("1Gbps"));
+  hub2hub_500ms.SetDeviceAttribute("DataRate", StringValue("50Mbps"));
   hub2hub_500ms.SetChannelAttribute("Delay", StringValue(backBoneDelay));
 
   // Create nodes
@@ -218,21 +218,69 @@ int main(int argc, char* argv[])
   Worm::SetPacketSize(payload);
   uint32_t numVulnerableNodes = 0;
 
-  for(uint32_t i = 0; i < nChild; i++){
+  for(uint32_t i = 0; i < nChild * nInner; i++){
     PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
     ApplicationContainer sinkApp = sinkHelper.Install (bomb0.GetChildNode(i));
     sinkApp.Start(Seconds (0.0));
 
     OnOffHelper client ("ns3::UdpSocketFactory", Address ());
-    AddressValue remoteAddress (InetSocketAddress(bomb1.GetChildIpv4Address(i), 9999));
+    AddressValue remoteAddress (InetSocketAddress (bomb1.GetChildIpv4Address(i), 9999));
     client.SetAttribute ("Remote", remoteAddress);
-    client.SetAttribute ("MaxBytes", UintegerValue(50000));
+    client.SetAttribute ("MaxBytes", UintegerValue(0));
+    client.SetAttribute ("DataRate",StringValue ("1Gbps"));
 
     ApplicationContainer clientApp;
     clientApp.Add (client.Install (bomb0.GetChildNode(i)));
     clientApp.Start (Seconds (0.0));
   }
 
+  for(uint32_t i = 0; i < nChild * nInner; i++){
+    PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
+    ApplicationContainer sinkApp = sinkHelper.Install (bomb1.GetChildNode(i));
+    sinkApp.Start(Seconds (0.0));
+
+    OnOffHelper client ("ns3::UdpSocketFactory", Address ());
+    AddressValue remoteAddress (InetSocketAddress (bomb2.GetChildIpv4Address(i), 9999));
+    client.SetAttribute ("Remote", remoteAddress);
+    client.SetAttribute ("MaxBytes", UintegerValue(0));
+    client.SetAttribute ("DataRate",StringValue ("1Gbps"));
+
+    ApplicationContainer clientApp;
+    clientApp.Add (client.Install (bomb1.GetChildNode(i)));
+    clientApp.Start (Seconds (0.0));
+  }
+  
+  for(uint32_t i = 0; i < nChild * nInner; i++){
+    PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
+    ApplicationContainer sinkApp = sinkHelper.Install (bomb2.GetChildNode(i));
+    sinkApp.Start(Seconds (0.0));
+
+    OnOffHelper client ("ns3::UdpSocketFactory", Address ());
+    AddressValue remoteAddress (InetSocketAddress (bomb3.GetChildIpv4Address(i), 9999));
+    client.SetAttribute ("Remote", remoteAddress);
+    client.SetAttribute ("MaxBytes", UintegerValue(0));
+    client.SetAttribute ("DataRate",StringValue ("1Gbps"));
+
+    ApplicationContainer clientApp;
+    clientApp.Add (client.Install (bomb2.GetChildNode(i)));
+    clientApp.Start (Seconds (0.0));
+  }
+
+  for(uint32_t i = 0; i < nChild * nInner; i++){
+    PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9999));
+    ApplicationContainer sinkApp = sinkHelper.Install (bomb3.GetChildNode(i));
+    sinkApp.Start(Seconds (0.0));
+
+    OnOffHelper client ("ns3::UdpSocketFactory", Address ());
+    AddressValue remoteAddress (InetSocketAddress (bomb0.GetChildIpv4Address(i), 9999));
+    client.SetAttribute ("Remote", remoteAddress);
+    client.SetAttribute ("MaxBytes", UintegerValue(0));
+    client.SetAttribute ("DataRate",StringValue ("1Gbps"));
+
+    ApplicationContainer clientApp;
+    clientApp.Add (client.Install (bomb3.GetChildNode(i)));
+    clientApp.Start (Seconds (0.0));
+  }
   // Add the worm application to each node.
   if(systemId == 0%systemCount){
     for(uint32_t i=0; i < nChild * nInner; i++)
