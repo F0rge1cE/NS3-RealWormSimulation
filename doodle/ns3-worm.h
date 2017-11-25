@@ -49,6 +49,11 @@ public:
     static void SetNumConn (uint32_t numConn);
     static void SetPacketSize (uint32_t pktSize);
     static void SetPatternId (uint32_t patternId);
+    /////////////////////
+    void SetPatching (bool patching);
+    void SetPatchingTime (double patchingTime);
+    
+    /////////////////////
     // static uint32_t GetTotalNodes ();
     // static uint32_t GetExistNodes ();
     static uint32_t GetInfectedNodes ();
@@ -69,7 +74,9 @@ protected:
     bool m_infected;
     bool m_vulnerable;
     bool m_connected;
-
+    //////////////////
+    bool m_patching;
+    //////////////////
     uint16_t m_infectionPort;
     uint32_t m_subnetId;
     static uint32_t m_pktSize;
@@ -84,6 +91,9 @@ protected:
     std::string m_name;
 
     ns3::EventId m_sendEvent;
+    ///////////
+    ns3::EventId m_patchEvent;
+    ///////////
     ns3::TypeId m_typeId;
     ns3::Ptr<ns3::RandomVariableStream> m_offTime;      //!< rng for Off Time
     ns3::Ptr<ns3::Socket> m_sinkSocket;
@@ -107,6 +117,10 @@ private:
     void SendPacket(uint32_t index);
     void StartSending(uint32_t index);
     void ScheduleNextTx(uint32_t index);
+    ///////////////////
+    // void SchedulePatching();
+    void StartPatching();
+    ///////////////////
 };
 
 #endif // WORM_APPLICATION_H
