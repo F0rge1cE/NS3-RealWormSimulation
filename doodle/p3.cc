@@ -56,6 +56,7 @@ author :
 
 using namespace ns3;
 using namespace std;
+
 typedef struct timeval TIMER_TYPE;
 #define TIMER_NOW(_t) gettimeofday (&_t,NULL);
 #define TIMER_SECONDS(_t) ((double)(_t).tv_sec + (_t).tv_usec * 1e-6)
@@ -103,30 +104,20 @@ int main(int argc, char* argv[])
   cmd.Parse (argc,argv);
 
   //payload = scanrate * 100;
-  if(scanPattern=="Uniform")
-  {
+  if(scanPattern=="Uniform"){
     patternId = 0;
-  }
-  else if(scanPattern == "Local")
-  {
+  }else if(scanPattern == "Local"){
     patternId = 1;
-  }
-  else if(scanPattern == "Sequential")
-  {
+  }else if(scanPattern == "Sequential"){
     patternId = 2;
   }
 
-
-  if(nullmsg=="Null")
-    {
-      GlobalValue::Bind ("SimulatorImplementationType",
-                         StringValue ("ns3::NullMessageSimulatorImpl"));
-    }
-  else
-    {
-      GlobalValue::Bind ("SimulatorImplementationType",
-                         StringValue ("ns3::DistributedSimulatorImpl"));
-    }
+  if(nullmsg=="Null"){
+    GlobalValue::Bind ("SimulatorImplementationType", StringValue ("ns3::NullMessageSimulatorImpl"));
+  }else{
+      GlobalValue::Bind ("SimulatorImplementationType", StringValue ("ns3::DistributedSimulatorImpl"));
+  }
+  
   SeedManager::SetSeed (seedValue);
   Ptr<UniformRandomVariable> uv = CreateObject<UniformRandomVariable> ();
 
@@ -138,14 +129,14 @@ int main(int argc, char* argv[])
   uint32_t systemCount = MpiInterface::GetSize ();
 
   // We only do simulation with 4 processors.
-  if (systemCount != 1 && systemCount != 2 && systemCount != 4)
-    {
+  if (systemCount != 1 && systemCount != 2 && systemCount != 4){
       std::cout << "Only 1, 2 or 4 processors are accepted. Now have " << systemCount << std::endl;
       return 1;
-    }
+  }
 
   uint32_t nInner = 8;
   uint32_t nChild = 2;
+  uint32_t nHub = 4;
 
   PointToPointHelper hubInner;
   hubInner.SetDeviceAttribute("DataRate", StringValue("1Mbps"));
@@ -157,64 +148,52 @@ int main(int argc, char* argv[])
 
   // ****** For MPI
   // P2P between hubs
-  PointToPointHelper hub2hub_10ms;
-  hub2hub_10ms.SetDeviceAttribute("DataRate", StringValue("50Mbps"));
-  hub2hub_10ms.SetChannelAttribute("Delay", StringValue(backBoneDelay));
 
-  PointToPointHelper hub2hub_100ms;
-  hub2hub_100ms.SetDeviceAttribute("DataRate", StringValue("50Mbps"));
-  hub2hub_100ms.SetChannelAttribute("Delay", StringValue(backBoneDelay));
-
-  PointToPointHelper hub2hub_500ms;
-  hub2hub_500ms.SetDeviceAttribute("DataRate", StringValue("50Mbps"));
-  hub2hub_500ms.SetChannelAttribute("Delay", StringValue(backBoneDelay));
+  PointToPointHelper hub2hub;
+  hub2hub.SetDeviceAttribute("DataRate", StringValue("50Mbps"));
+  hub2hub.SetChannelAttribute("Delay", StringValue(backBoneDelay));
 
   // Create nodes
 
   std::vector<PointToPointCampusHelper> bombs;
-  for(uint32_t i = 0; i<4; i++){
+  for(uint32_t i = 0; i<nHub; i++){
     PointToPointCampusHelper bomb(nInner, hubInner, nChild, innerChild, 0);
     bombs.push_back(bomb);
   }
 
-  NetDeviceContainer hubDevice;
-  NetDeviceContainer hub2hub_dev1 = hub2hub_10ms.Install (bombs[0].GetHub(), bombs[1].GetHub());
-  NetDeviceContainer hub2hub_dev2 = hub2hub_100ms.Install (bombs[1].GetHub(), bombs[2].GetHub());
-  NetDeviceContainer hub2hub_dev3 = hub2hub_500ms.Install (bombs[2].GetHub(), bombs[3].GetHub());
+  // NetDeviceContainer hubDevice;
+  std::vector<NetDeviceContainer> hub2HubDevs;
+  for(uint32_t i = 0; i<nHub-1; i++){
+    NetDeviceContainer hub2hub_dev = hub2hub.Install (bombs[i].GetHub(), bombs[i+1].GetHub());
+    hub2HubDevs.push_back(hub2hub_dev);
+  }
 
   InternetStackHelper stack;
-
+  stack.InstallAll ();
+  
   // Apply Nix Vector
-  if (nix)
-    {
+  if (nix){
       std::cout << "Nix Vector Enabled " << std::endl;
       Ipv4NixVectorHelper nixRouting;
       stack.SetRoutingHelper (nixRouting); // has effect on the next Install ()
-    }
+  }
 
-  stack.InstallAll ();
-
+  ostringstream oss;
+  
   Ipv4AddressHelper address;
-  address.SetBase("10.1.1.0", "255.255.255.0");
-  bombs[0].AssignIpv4Addresses(address);
+  for(uint32_t i = 0; i<bombs.size(); i++){
+    oss.str ("");
+    oss << "10." << i+1 << ".1.0";
+    address.SetBase(oss.str().c_str (), "255.255.255.0");
+    bombs[i].AssignIpv4Addresses(address);
+  }
 
-  address.SetBase("10.2.1.0", "255.255.255.0");
-  bombs[1].AssignIpv4Addresses(address);
-
-  address.SetBase("10.3.1.0", "255.255.255.0");
-  bombs[2].AssignIpv4Addresses(address);
-
-  address.SetBase("10.4.1.0", "255.255.255.0");
-  bombs[3].AssignIpv4Addresses(address);
-
-  address.SetBase("10.5.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer hub2hub_inter1 = address.Assign(hub2hub_dev1);
-
-  address.SetBase("10.6.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer hub2hub_inter2 = address.Assign(hub2hub_dev2);
-
-  address.SetBase("10.7.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer hub2hub_inter3 = address.Assign(hub2hub_dev3);
+  for(uint32_t i = 0; i<hub2HubDevs.size(); i++){
+    oss.str ("");
+    oss << "10." << i + bombs.size() + 1 << ".1.0";
+    address.SetBase(oss.str().c_str (), "255.255.255.0");
+    address.Assign(hub2HubDevs[i]);
+  }
 
   Worm::SetPacketSize(payload);
   uint32_t numVulnerableNodes = 0;
