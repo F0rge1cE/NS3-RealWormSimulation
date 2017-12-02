@@ -11,6 +11,7 @@ author :
 #include <stdio.h>
 #include <string>
 #include <sys/time.h>
+#include <math.h>  
 //#include <vector>
 #include <time.h>
 #include <iomanip>
@@ -26,6 +27,7 @@ author :
 #include "ns3/flow-monitor-helper.h"
 #include "ns3/point-to-point-layout-module.h"
 #include "ns3/stats-module.h"
+#include "ns3/random-variable-stream.h"
 
 #include "ns3-worm.h"
 
@@ -48,6 +50,7 @@ author :
 #define SCANRANGE      0
 #define PAYLOAD        404
 #define SIMTIME        0.4
+#define PATCH false
 #define SEEDVALUE      1
 #define NIX true
 #define NULLMSG false
@@ -83,6 +86,7 @@ int main(int argc, char* argv[])
   string nullmsg ("Yawns");
   bool nix = NIX;
   bool tracing = TRACING;
+  bool patch = PATCH;
 
   CommandLine cmd;
   cmd.AddValue ("ScanRate",      "Scan rate",                    scanrate);
@@ -92,6 +96,7 @@ int main(int argc, char* argv[])
   cmd.AddValue ("seedvalue",     "Seed value for RNG",           seedValue);
   cmd.AddValue ("vulnerability", "Vulnerability to infection",   vulnerability);
   cmd.AddValue ("simtime",       "Simulator time in seconds",    simtime);
+  cmd.AddValue ("patch",       "Enable Universal Patching",    patch);
   cmd.AddValue ("logTop",        "Display the topology stats",   logTop);
   cmd.AddValue ("BackboneDelay",        "change back bone Delay",   backBoneDelay);
 
@@ -235,20 +240,17 @@ int main(int argc, char* argv[])
       wormApp->SetSysId(systemId);
 
       // Set the initial infected node.
-      if(i==0){
-        wormApp->SetVulnerable (true);
-        wormApp -> SetInfected (true);
-        wormApp -> SetTotalNumOfInfected(1);
-        numVulnerableNodes++;
-        wormApp->SetPatching (true);
-        wormApp->SetPatchingTime (0.1);
+      wormApp->SetVulnerable (true);
+      wormApp -> SetInfected (true);
+      wormApp -> SetTotalNumOfInfected(1);
+      numVulnerableNodes++;
+      wormApp->SetPatching (patch);
+      wormApp->SetPatchingTime (sqrt(uv->GetValue(SIMTIME / 10, SIMTIME * 1.5) * SIMTIME * 1.5));
 
-      }
 
       wormApp->SetStartTime (Seconds (0.0));
       wormApp->SetStopTime (Seconds (simtime));
       wormApp->SetPatternId (patternId);
-      wormApp->HelpGuessIP (nHub,nInner, nChild);
 
       bombs.at(0).GetChildNode(i)->AddApplication (wormApp);
       wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
