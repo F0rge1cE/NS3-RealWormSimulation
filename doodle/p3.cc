@@ -178,8 +178,6 @@ int main(int argc, char* argv[])
   }
   stack.InstallAll ();
 
-  stack.InstallAll ();
-
   ostringstream oss;
   
   Ipv4AddressHelper address;
