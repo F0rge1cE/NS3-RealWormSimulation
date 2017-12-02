@@ -101,7 +101,7 @@ void Worm::SetSysId(uint32_t id)
 
 void Worm::GetCurrentStatus()
 {
-  std::cout << Worm::GetInfectedNodes()<< " " << Worm::GetSysId()<< " " << ns3::Simulator::Now().As(Time::MS) << std::endl;
+  std::cout << Worm::GetInfectedNodes()<< " " << Worm::GetSysId()<< " " << ns3::Simulator::Now().GetMilliSeconds() << std::endl;
 }
 
 void Worm::SetInfected(bool alreadyInfected)
