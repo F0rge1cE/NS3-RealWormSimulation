@@ -31,6 +31,9 @@ uint32_t Worm::m_totalInfected = 0;
 uint32_t Worm::m_numConn = 1;
 uint32_t Worm::m_pktSize = 5120;
 uint32_t Worm::m_patternId = 0;
+uint32_t Worm::m_nHub = 4;
+uint32_t Worm::m_nInner = 8;
+uint32_t Worm::m_nChild = 2;
 double Worm::m_chooseLocalPercent = 0.65;
 
 uint32_t Worm::m_systemID = 0;
@@ -65,6 +68,7 @@ Worm::Worm()
     m_connected(false),
     ////////////
     m_patching(false),
+
     ////////////
     m_residualBits(0),
     m_totalBytes(0),
@@ -145,6 +149,13 @@ void Worm::SetPatchingTime (double patchingTime)
   } 
 }
 
+void Worm::HelpGuessIP (uint32_t nHub, uint32_t nInner, uint32_t nChild)
+{
+  m_nHub = nHub;
+  m_nInner = nInner;
+  m_nChild = nChild;
+}
+
 void Worm::StartPatching()
 {
   if(m_infected) m_totalInfected--;
@@ -190,8 +201,11 @@ ns3::Ipv4Address Worm::guessIP()
   double i, j, k;
   if(m_patternId == 0)
   {
-    i = uv->GetValue(1.0, 5.0);
-    j = uv->GetValue(1.0, 111.0);
+    // i = uv->GetValue(1.0, 5.0);
+    // j = uv->GetValue(1.0, 111.0);
+    i = uv->GetValue(1.0, m_nHub+1.0);
+    j = uv->GetValue(1.0, m_nInner*m_nChild+1.0);
+    j = (double) (((uint32_t)j - 1)/ m_nChild + 1 + (uint32_t)j);
     k = 2;
   }
 

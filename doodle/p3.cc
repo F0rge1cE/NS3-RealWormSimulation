@@ -47,7 +47,7 @@ author :
 #define SCANRATE       5
 #define SCANRANGE      0
 #define PAYLOAD        404
-#define SIMTIME        0.2
+#define SIMTIME        0.4
 #define SEEDVALUE      1
 #define NIX true
 #define NULLMSG false
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
   }
 
   uint32_t nInner = 8;
-  uint32_t nChild = 2;
+  uint32_t nChild = 4;
   uint32_t nHub = 4;
 
   PointToPointHelper hubInner;
@@ -169,7 +169,6 @@ int main(int argc, char* argv[])
   }
 
   InternetStackHelper stack;
-  stack.InstallAll ();
   
   // Apply Nix Vector
   if (nix){
@@ -177,6 +176,7 @@ int main(int argc, char* argv[])
       Ipv4NixVectorHelper nixRouting;
       stack.SetRoutingHelper (nixRouting); // has effect on the next Install ()
   }
+  stack.InstallAll ();
 
   ostringstream oss;
   
@@ -248,6 +248,7 @@ int main(int argc, char* argv[])
       wormApp->SetStartTime (Seconds (0.0));
       wormApp->SetStopTime (Seconds (simtime));
       wormApp->SetPatternId (patternId);
+      wormApp->HelpGuessIP (nHub,nInner, nChild);
 
       bombs.at(0).GetChildNode(i)->AddApplication (wormApp);
       wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);

@@ -52,7 +52,7 @@ public:
     /////////////////////
     void SetPatching (bool patching);
     void SetPatchingTime (double patchingTime);
-    
+    static void HelpGuessIP (uint32_t nHub, uint32_t nInner, uint32_t nChild);
     /////////////////////
     // static uint32_t GetTotalNodes ();
     // static uint32_t GetExistNodes ();
@@ -76,6 +76,9 @@ protected:
     bool m_connected;
     //////////////////
     bool m_patching;
+    static uint32_t m_nHub;    
+    static uint32_t m_nInner;
+    static uint32_t m_nChild;
     //////////////////
     uint16_t m_infectionPort;
     uint32_t m_subnetId;
