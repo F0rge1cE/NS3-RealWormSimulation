@@ -49,13 +49,13 @@ author :
 #define SCANRATE       5
 #define SCANRANGE      0
 #define PAYLOAD        404
-#define SIMTIME        3.0
+#define SIMTIME        1.0
 #define PATCH false
 #define SEEDVALUE      1
 #define NIX true
 #define NULLMSG false
 #define TRACING false
-#define PATTERNID 3
+#define PATTERNID 1
 
 using namespace ns3;
 using namespace std;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
       return 1;
   }
 
-  uint32_t nInner = 8;
+  uint32_t nInner = 15;
   uint32_t nChild = 16;
   uint32_t nHub = 4;
 
@@ -253,6 +253,7 @@ int main(int argc, char* argv[])
       wormApp->SetStartTime (Seconds (0.0));
       wormApp->SetStopTime (Seconds (simtime));
       wormApp->SetPatternId (patternId);
+      wormApp->HelpGuessIP(nHub, nInner, nChild);
 
       bombs.at(0).GetChildNode(i)->AddApplication (wormApp);
       wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
