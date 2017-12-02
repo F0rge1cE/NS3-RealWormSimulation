@@ -47,7 +47,7 @@ author :
 #define SCANRATE       5
 #define SCANRANGE      0
 #define PAYLOAD        404
-#define SIMTIME        0.2
+#define SIMTIME        0.5
 #define SEEDVALUE      1
 #define NIX true
 #define NULLMSG false
@@ -169,7 +169,6 @@ int main(int argc, char* argv[])
   }
 
   InternetStackHelper stack;
-  stack.InstallAll ();
   
   // Apply Nix Vector
   if (nix){
@@ -177,6 +176,8 @@ int main(int argc, char* argv[])
       Ipv4NixVectorHelper nixRouting;
       stack.SetRoutingHelper (nixRouting); // has effect on the next Install ()
   }
+
+  stack.InstallAll ();
 
   ostringstream oss;
   
