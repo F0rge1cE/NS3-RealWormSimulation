@@ -224,102 +224,44 @@ int main(int argc, char* argv[])
   }
   
 
-  //Add the worm application to each node.
-  if(systemId == 0%systemCount){
-    for(uint32_t i=0; i < nChild * nInner; i++)
-    {
-      Ptr<Worm> wormApp = CreateObject<Worm> ();
+  for(uint32_t j = 0; j < nHub; j++){
+    //Add the worm application to each node.
+    if(systemId == j%systemCount){
+      for(uint32_t i=0; i < nChild * nInner; i++)
+      {
+        Ptr<Worm> wormApp = CreateObject<Worm> ();
 
-      if (uv->GetValue(0.0, 1.0) <= vulnerability) {
-        wormApp->SetVulnerable (true);
-        if(i!=0) numVulnerableNodes++;
+        if (uv->GetValue(0.0, 1.0) <= vulnerability) {
+          wormApp->SetVulnerable (true);
+          if(i!=0) numVulnerableNodes++;
+        }
+
+        std::string temp1 = "a" + std::to_string(i) + " " + std::to_string(systemId);
+        wormApp->SetName(temp1);
+        wormApp->SetSysId(systemId);
+
+        // Set the initial infected node.
+        if(j==0){
+          wormApp->SetVulnerable (true);
+          wormApp -> SetInfected (true);
+          
+          wormApp -> SetTotalNumOfInfected(1);
+          numVulnerableNodes++;
+        }
+        wormApp->SetPatching (patch);
+        wormApp->SetPatchingTime (sqrt(uv->GetValue(SIMTIME / 10, SIMTIME * 1.5) * SIMTIME * 1.5));
+
+
+        wormApp->SetStartTime (Seconds (0.0));
+        wormApp->SetStopTime (Seconds (simtime));
+        wormApp->SetPatternId (patternId);
+
+        bombs.at(j).GetChildNode(i)->AddApplication (wormApp);
+        wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
       }
-
-      std::string temp1 = "a" + std::to_string(i) + " " + std::to_string(systemId);
-      wormApp->SetName(temp1);
-      wormApp->SetSysId(systemId);
-
-      // Set the initial infected node.
-      wormApp->SetVulnerable (true);
-      wormApp -> SetInfected (true);
-      wormApp -> SetTotalNumOfInfected(1);
-      numVulnerableNodes++;
-      wormApp->SetPatching (patch);
-      wormApp->SetPatchingTime (sqrt(uv->GetValue(SIMTIME / 10, SIMTIME * 1.5) * SIMTIME * 1.5));
-
-
-      wormApp->SetStartTime (Seconds (0.0));
-      wormApp->SetStopTime (Seconds (simtime));
-      wormApp->SetPatternId (patternId);
-
-      bombs.at(0).GetChildNode(i)->AddApplication (wormApp);
-      wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
     }
   }
 
-  if(systemId == 1%systemCount){
-    for(uint32_t i=0; i < nChild * nInner; i++)
-    {
-      Ptr<Worm> wormApp = CreateObject<Worm> ();
-
-      if (uv->GetValue(0.0, 1.0) <= vulnerability) {
-        wormApp->SetVulnerable (true);
-        numVulnerableNodes++;
-      }
-
-      std::string temp1 = "b" + std::to_string(i) + " " + std::to_string(systemId);
-      wormApp->SetName(temp1);
-      wormApp->SetSysId(systemId);
-
-      wormApp->SetStartTime (Seconds (0.0));
-      wormApp->SetStopTime (Seconds (simtime));
-
-      bombs.at(1).GetChildNode(i)->AddApplication (wormApp);
-      wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
-    }
-  }
-
-  if(systemId == 2%systemCount){
-    for(uint32_t i=0; i < nChild * nInner; i++){
-      Ptr<Worm> wormApp = CreateObject<Worm> ();
-
-      if (uv->GetValue(0.0, 1.0) <= vulnerability) {
-        wormApp->SetVulnerable (true);
-        numVulnerableNodes++;
-      }
-
-      std::string temp1 = "c" + std::to_string(i) + " " + std::to_string(systemId);
-      wormApp->SetName(temp1);
-      wormApp->SetSysId(systemId);
-
-      wormApp->SetStartTime (Seconds (0.0));
-      wormApp->SetStopTime (Seconds (simtime));
-
-      bombs.at(2).GetChildNode(i)->AddApplication (wormApp);
-      wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
-    }
-  }
-
-  if(systemId == 3%systemCount){
-    for(uint32_t i=0; i < nChild * nInner; i++){
-      Ptr<Worm> wormApp = CreateObject<Worm> ();
-
-      if (uv->GetValue(0.0, 1.0) <= vulnerability) {
-        wormApp->SetVulnerable (true);
-        numVulnerableNodes++;
-      }
-
-      std::string temp1 = "d" + std::to_string(i) + " " + std::to_string(systemId);
-      wormApp->SetName(temp1);
-      wormApp->SetSysId(systemId);
-
-      wormApp->SetStartTime (Seconds (0.0));
-      wormApp->SetStopTime (Seconds (simtime));
-
-      bombs.at(3).GetChildNode(i)->AddApplication (wormApp);
-      wormApp->SetUp ("ns3::UdpSocketFactory", 5000, systemId);
-    }
-  }
 
   for (int i = 0; i < 5000; ++i) {
       ns3::Simulator::Schedule(ns3::Seconds((double)i*.1), &Worm::SetNumInfected);
