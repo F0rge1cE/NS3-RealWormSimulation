@@ -134,7 +134,7 @@ PointToPointCampusHelper::AssignIpv4Addresses (Ipv4AddressHelper address){
 
         address.NewNetwork ();
         // std::cout << m_innerInterfaces.GetAddress(i*3+j+1) << std::endl;
-        std::cout << m_childInterfaces.GetAddress(i*nChild + j) << std::endl;
+        // std::cout << m_childInterfaces.GetAddress(i*nChild + j) << std::endl;
 
       }
       // address.NewNetwork ();

@@ -340,7 +340,7 @@ void Worm::StartApplication()    // Called at time specified by Start
   if (m_vulnerable) {
       if (m_infected) {
           StartInfectingNodes();
-          std::cerr << m_name << "I'm the first" << std::endl;
+          // std::cerr << m_name << "I'm the first" << std::endl;
       }
   }
   // std::cerr << m_name << "end application" << std::endl;
