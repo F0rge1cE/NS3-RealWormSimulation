@@ -1,0 +1,54 @@
+[32mWaf: Entering directory `/home/willqiang/ns3/ns-allinone-3.26/ns-3.26/build'[0m
+[ 869/1777] Compiling [32mscratch/wenxin/p3.cc[0m
+[1764/1777] Linking [33mbuild/scratch/wenxin/wenxin[0m
+[32mWaf: Leaving directory `/home/willqiang/ns3/ns-allinone-3.26/ns-3.26/build'[0m
+[32mBuild commands will be stored in build/compile_commands.json[0m
+[32m'build' finished successfully (4.326s)[0m
+Nix Vector Enabled 
+1 0 0
+1 0 10
+1 0 20
+1 0 29
+1 0 40
+1 0 50
+1 0 59
+2 0 70
+2 0 80
+2 0 89
+3 0 100
+5 0 110
+7 0 119
+10 0 130
+13 0 140
+19 0 149
+25 0 160
+34 0 170
+48 0 179
+69 0 190
+91 0 200
+126 0 209
+159 0 220
+206 0 230
+283 0 239
+368 0 250
+480 0 260
+623 0 270
+806 0 280
+993 0 289
+1200 0 299
+1418 0 309
+1600 0 320
+1754 0 330
+1880 0 340
+1962 0 350
+2014 0 359
+2033 0 369
+2044 0 380
+2047 0 390
+2048 0 400
+2048 0 410
+2048 0 419
+2048 0 429
+2048 0 440
+2048 0 450
+2048 0 460
