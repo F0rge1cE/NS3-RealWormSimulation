@@ -2,10 +2,6 @@
 ### ECE6110@GeorgiaTech
 #### Final Project
 
-*What have we done: Simulated the spread of worms with different patterns in a busy Internet environment.*
-
-**Please Check the _FinalRelease_ folder for the latest code.**
-
 Collaborators:
 
 * Xueyang Xu 
